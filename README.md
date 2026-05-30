@@ -21,10 +21,10 @@ Available primitives:
 - `CommandBus` for application writes.
 - `QueryBus` for application reads.
 - `EventBus` for in-process event handlers.
+- `AggregateRoot` and `DomainEvent` for domain event collection.
 
 Planned primitives:
 
-- `AggregateRoot` for domain events.
 - `OutboxRepository` interface.
 - `EventPublisher` to coordinate domain events, outbox writes and optional
   in-process publication.
@@ -203,6 +203,72 @@ try {
 }
 ```
 
+## Domain Events
+
+`AggregateRoot` records domain events produced by domain behavior. It does not
+know about `EventBus`, outbox persistence, transactions or infrastructure.
+It is intentionally not generic over the full list of event types: forcing
+every aggregate to maintain a large event union makes real aggregates noisy.
+Keep event-specific typing inside the aggregate methods and `on<EventName>`
+handlers instead.
+
+```ts
+import { AggregateRoot, DomainEvent } from '@artworkdev/cqrs';
+
+class UserRegisteredDomainEvent extends DomainEvent {
+	constructor(
+		readonly userId: string,
+		readonly email: string,
+	) {
+		super();
+	}
+}
+
+class User extends AggregateRoot {
+	id = '';
+	email = '';
+
+	register(params: { readonly userId: string; readonly email: string }): void {
+		this.apply(
+			new UserRegisteredDomainEvent(params.userId, params.email),
+		);
+	}
+
+	protected onUserRegisteredDomainEvent(
+		event: UserRegisteredDomainEvent,
+	): void {
+		this.id = event.userId;
+		this.email = event.email;
+	}
+}
+
+const user = new User();
+
+user.register({
+	userId: 'user-1',
+	email: 'alice@example.com',
+});
+
+const events = user.pullDomainEvents();
+```
+
+`apply()` records new events and invokes a matching internal handler named
+`on<EventClassName>` when it exists.
+
+```ts
+this.apply(new UserRegisteredDomainEvent('user-1', 'alice@example.com'));
+```
+
+`loadFromHistory()` replays events into the aggregate without recording them as
+new events.
+
+```ts
+user.loadFromHistory(previousEvents);
+```
+
+Use `pullDomainEvents()` after persistence to collect and clear pending events.
+Use `getDomainEvents()` only for inspection.
+
 ## EventBus vs EventPublisher
 
 `EventBus` is the low-level in-process publication mechanism. It finds
@@ -241,6 +307,8 @@ export {
 	EventBus,
 	EventHandlerExecutionError,
 	EventRegistry,
+	AggregateRoot,
+	DomainEvent,
 	Query,
 	QueryBus,
 	QueryHandlerAlreadyRegisteredError,

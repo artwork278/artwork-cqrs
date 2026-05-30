@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Add `DomainEvent`.
+- Add `AggregateRoot` with domain event recording, pulling, clearing and
+  history replay.
+- Keep `AggregateRoot` non-generic to avoid noisy event unions on aggregates
+  with many domain events.
+- Document domain event usage and transaction boundaries.
+
 ## 0.2.0
 
 - Add `Query`, `QueryBus`, `QueryRegistry` and query handler errors.

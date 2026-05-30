@@ -1,6 +1,6 @@
 {
 	"name": "@artworkdev/cqrs",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Standalone CQRS primitives for TypeScript applications.",
 	"type": "module",
 	"license": "UNLICENSED",

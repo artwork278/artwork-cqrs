@@ -16,6 +16,8 @@ import {
 	QueryHandlerNotFoundError,
 } from './core/query/QueryErrors.js';
 import { QueryRegistry } from './core/query/QueryRegistry.js';
+import { AggregateRoot } from './ddd/AggregateRoot.js';
+import { DomainEvent } from './ddd/DomainEvent.js';
 
 export type {
 	CommandConstructor,
@@ -28,11 +30,13 @@ export type {
 export type { EventHandlerExecutionFailure } from './core/event/EventErrors.js';
 export type { QueryConstructor, QueryHandler } from './core/query/Query.js';
 export {
+	AggregateRoot,
 	Command,
 	CommandBus,
 	CommandHandlerAlreadyRegisteredError,
 	CommandHandlerNotFoundError,
 	CommandRegistry,
+	DomainEvent,
 	Event,
 	EventBus,
 	EventHandlerExecutionError,
