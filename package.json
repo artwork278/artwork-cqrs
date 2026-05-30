@@ -1,7 +1,7 @@
 {
 	"name": "@artworkdev/cqrs",
-	"version": "0.1.0",
-	"description": "Standalone CQRS, DDD and outbox primitives.",
+	"version": "0.2.0",
+	"description": "Standalone CQRS primitives for TypeScript applications.",
 	"type": "module",
 	"license": "UNLICENSED",
 	"packageManager": "bun@1.3.14",
@@ -18,8 +18,9 @@
 		"cqrs",
 		"ddd",
 		"command-bus",
-		"typescript",
-		"outbox"
+		"query-bus",
+		"event-bus",
+		"typescript"
 	],
 	"module": "src/index.ts",
 	"main": "dist/index.js",
@@ -32,16 +33,17 @@
 	},
 	"files": [
 		"dist",
-		"README.md"
+		"README.md",
+		"CHANGELOG.md"
 	],
 	"publishConfig": {
 		"access": "public"
 	},
 	"scripts": {
 		"test": "bun test",
-		"lint": "biome lint src tests package.json tsconfig.json tsconfig.build.json biome.json README.md RELEASE.md",
-		"format": "biome format --write src tests package.json tsconfig.json tsconfig.build.json biome.json README.md RELEASE.md",
-		"check": "biome check src tests package.json tsconfig.json tsconfig.build.json biome.json README.md RELEASE.md",
+		"lint": "biome lint src tests package.json tsconfig.json tsconfig.build.json biome.json README.md RELEASE.md CHANGELOG.md",
+		"format": "biome format --write src tests package.json tsconfig.json tsconfig.build.json biome.json README.md RELEASE.md CHANGELOG.md",
+		"check": "biome check src tests package.json tsconfig.json tsconfig.build.json biome.json README.md RELEASE.md CHANGELOG.md",
 		"validate": "bun run check && bun run typecheck && bun test",
 		"typecheck": "tsc --noEmit",
 		"build": "rm -rf dist && tsc -p tsconfig.build.json",

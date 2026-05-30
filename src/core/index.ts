@@ -1,16 +1,27 @@
-export type { CommandConstructor, CommandHandler } from './Command.js';
-export { Command } from './Command.js';
-export { CommandBus } from './CommandBus.js';
+export type { CommandConstructor, CommandHandler } from './command/index.js';
 export {
+	Command,
+	CommandBus,
 	CommandHandlerAlreadyRegisteredError,
 	CommandHandlerNotFoundError,
-} from './CommandErrors.js';
-export { CommandRegistry } from './CommandRegistry.js';
-export type { QueryConstructor, QueryHandler } from './Query.js';
-export { Query } from './Query.js';
-export { QueryBus } from './QueryBus.js';
+	CommandRegistry,
+} from './command/index.js';
+export type {
+	EventConstructor,
+	EventHandler,
+	EventHandlerExecutionFailure,
+} from './event/index.js';
 export {
+	Event,
+	EventBus,
+	EventHandlerExecutionError,
+	EventRegistry,
+} from './event/index.js';
+export type { QueryConstructor, QueryHandler } from './query/index.js';
+export {
+	Query,
+	QueryBus,
 	QueryHandlerAlreadyRegisteredError,
 	QueryHandlerNotFoundError,
-} from './QueryErrors.js';
-export { QueryRegistry } from './QueryRegistry.js';
+	QueryRegistry,
+} from './query/index.js';

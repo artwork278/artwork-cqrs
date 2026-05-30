@@ -1,0 +1,15 @@
+# Changelog
+
+## 0.2.0
+
+- Add `Query`, `QueryBus`, `QueryRegistry` and query handler errors.
+- Add `Event`, `EventBus`, `EventRegistry` and event handler execution errors.
+- Move command/query internals into dedicated `src/core/command` and
+  `src/core/query` folders.
+- Document command, query and event usage.
+
+## 0.1.0
+
+- Initial public npm release.
+- Add `Command`, `CommandBus`, `CommandRegistry` and command handler errors.
+- Add npm release workflow.
