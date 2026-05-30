@@ -36,6 +36,47 @@ await commandBus.execute(
 );
 ```
 
+## Queries
+
+```ts
+import { Query, QueryBus, type QueryHandler } from '@artworkdev/cqrs';
+
+type UserProfileViewModel = {
+	id: string;
+	email: string;
+};
+
+class RetrieveUserProfileQuery extends Query<UserProfileViewModel> {
+	constructor(readonly userId: string) {
+		super();
+	}
+}
+
+class RetrieveUserProfileQueryHandler
+	implements QueryHandler<RetrieveUserProfileQuery, UserProfileViewModel>
+{
+	async execute(
+		query: RetrieveUserProfileQuery,
+	): Promise<UserProfileViewModel> {
+		return {
+			id: query.userId,
+			email: 'alice@example.com',
+		};
+	}
+}
+
+const queryBus = new QueryBus();
+
+queryBus.register(
+	RetrieveUserProfileQuery,
+	new RetrieveUserProfileQueryHandler(),
+);
+
+const profile = await queryBus.execute(
+	new RetrieveUserProfileQuery('user-1'),
+);
+```
+
 ## Development
 
 ```bash
