@@ -7,7 +7,8 @@ This package is published as a public scoped npm package.
 - The working tree is clean.
 - `package.json` contains the target version.
 - The npm account has publish access to the `@artworkdev` scope.
-- GitHub Actions has an `NPM_TOKEN` secret with publish permission.
+- GitHub Actions has an `NPM_TOKEN` secret with read/write publish
+  permission for the `artworkdev` organization.
 
 ## Local checks
 
