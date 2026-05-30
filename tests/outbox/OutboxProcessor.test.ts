@@ -6,9 +6,11 @@ import {
 	EventBusDomainEventPublisher,
 	InMemoryOutboxRepository,
 	NoopTransactionPerformer,
+	OutboxEventRegistry,
 	type OutboxMessage,
 	OutboxMessageStatus,
 	OutboxProcessor,
+	RegisteredOutboxMessageDeserializer,
 } from '../../src';
 
 class UserRegisteredDomainEvent extends DomainEvent {
@@ -60,14 +62,21 @@ describe('OutboxProcessor', () => {
 		const outboxRepository = new InMemoryOutboxRepository(fixedClock);
 		const transactionPerformer = new NoopTransactionPerformer();
 		const domainEventPublisher = new RecordingDomainEventPublisher();
+		const registry = new OutboxEventRegistry();
+
+		registry.register(UserRegisteredDomainEvent, {
+			serialize: (event) => ({
+				userId: event.userId,
+			}),
+			deserialize: (payload) =>
+				new UserRegisteredDomainEvent(String(payload.userId)),
+		});
+
 		const processor = new OutboxProcessor({
 			outboxRepository,
 			transactionPerformer,
 			domainEventPublisher,
-			deserializer: {
-				deserialize: (message) =>
-					new UserRegisteredDomainEvent(String(message.payload.userId)),
-			},
+			deserializer: new RegisteredOutboxMessageDeserializer(registry),
 		});
 
 		await transactionPerformer.perform(

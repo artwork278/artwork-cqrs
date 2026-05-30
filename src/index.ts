@@ -20,8 +20,15 @@ import { AggregateRoot } from './ddd/AggregateRoot.js';
 import { DomainEvent } from './ddd/DomainEvent.js';
 import { EventBusDomainEventPublisher } from './outbox/DomainEventPublisher.js';
 import { InMemoryOutboxRepository } from './outbox/InMemoryOutboxRepository.js';
+import { OutboxEventRegistry } from './outbox/OutboxEventRegistry.js';
+import {
+	OutboxEventAlreadyRegisteredError,
+	OutboxEventNotRegisteredError,
+} from './outbox/OutboxEventRegistryErrors.js';
 import { OutboxMessageFactory } from './outbox/OutboxMessageFactory.js';
 import { OutboxProcessor } from './outbox/OutboxProcessor.js';
+import { RegisteredOutboxMessageDeserializer } from './outbox/RegisteredOutboxMessageDeserializer.js';
+import { RegisteredOutboxMessageSerializer } from './outbox/RegisteredOutboxMessageSerializer.js';
 import { NoopTransactionPerformer } from './transaction/NoopTransactionPerformer.js';
 
 export type {
@@ -35,6 +42,11 @@ export type {
 export type { EventHandlerExecutionFailure } from './core/event/EventErrors.js';
 export type { QueryConstructor, QueryHandler } from './core/query/Query.js';
 export type { DomainEventPublisher } from './outbox/DomainEventPublisher.js';
+export type {
+	DomainEventConstructor,
+	OutboxEventRegistration,
+	RegisteredOutboxEvent,
+} from './outbox/OutboxEventRegistry.js';
 export * from './outbox/OutboxMessage.js';
 export type {
 	Clock,
@@ -73,6 +85,9 @@ export {
 	EventRegistry,
 	InMemoryOutboxRepository,
 	NoopTransactionPerformer,
+	OutboxEventAlreadyRegisteredError,
+	OutboxEventNotRegisteredError,
+	OutboxEventRegistry,
 	OutboxMessageFactory,
 	OutboxProcessor,
 	Query,
@@ -80,4 +95,6 @@ export {
 	QueryHandlerAlreadyRegisteredError,
 	QueryHandlerNotFoundError,
 	QueryRegistry,
+	RegisteredOutboxMessageDeserializer,
+	RegisteredOutboxMessageSerializer,
 };

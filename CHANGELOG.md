@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add `OutboxEventRegistry` for event serializer/deserializer registration.
+- Add registered outbox message serializer and deserializer helpers.
+- Add registry errors for duplicate and missing outbox event registrations.
+
 ## 0.5.0
 
 - Breaking: make `OutboxRepository` write operations return

@@ -281,8 +281,9 @@ storage belongs to your application.
 import {
 	InMemoryOutboxRepository,
 	NoopTransactionPerformer,
+	OutboxEventRegistry,
 	OutboxMessageFactory,
-	type DomainEventSerializer,
+	RegisteredOutboxMessageSerializer,
 	type Clock,
 	type IdGenerator,
 } from '@artworkdev/cqrs';
@@ -295,18 +296,25 @@ const idGenerator: IdGenerator = {
 	generate: () => 'outbox-message-1',
 };
 
-const serializer: DomainEventSerializer<UserRegisteredDomainEvent> = {
+const outboxEventRegistry = new OutboxEventRegistry();
+
+outboxEventRegistry.register(UserRegisteredDomainEvent, {
 	serialize: (event) => ({
 		userId: event.userId,
 		email: event.email,
 	}),
-};
+	deserialize: (payload) =>
+		new UserRegisteredDomainEvent(
+			String(payload.userId),
+			String(payload.email),
+		),
+});
 
 const outboxMessageFactory =
-	new OutboxMessageFactory<UserRegisteredDomainEvent>({
+	new OutboxMessageFactory({
 		clock: fixedClock,
 		idGenerator,
-		serializer,
+		serializer: new RegisteredOutboxMessageSerializer(outboxEventRegistry),
 	});
 
 const outboxRepository = new InMemoryOutboxRepository(fixedClock);
@@ -373,6 +381,7 @@ import {
 	EventBus,
 	EventBusDomainEventPublisher,
 	OutboxProcessor,
+	RegisteredOutboxMessageDeserializer,
 } from '@artworkdev/cqrs';
 
 const eventBus = new EventBus();
@@ -381,18 +390,7 @@ const processor = new OutboxProcessor({
 	outboxRepository,
 	transactionPerformer,
 	domainEventPublisher: new EventBusDomainEventPublisher(eventBus),
-	deserializer: {
-		deserialize: (message) => {
-			if (message.eventName !== 'UserRegisteredDomainEvent') {
-				throw new Error(`Unknown event: ${message.eventName}`);
-			}
-
-			return new UserRegisteredDomainEvent(
-				String(message.payload.userId),
-				String(message.payload.email),
-			);
-		},
-	},
+	deserializer: new RegisteredOutboxMessageDeserializer(outboxEventRegistry),
 });
 
 const result = await processor.processPending({ limit: 100 });
@@ -438,6 +436,9 @@ export {
 	EventRegistry,
 	InMemoryOutboxRepository,
 	NoopTransactionPerformer,
+	OutboxEventAlreadyRegisteredError,
+	OutboxEventNotRegisteredError,
+	OutboxEventRegistry,
 	OutboxMessageFactory,
 	OutboxProcessor,
 	OutboxMessageStatus,
@@ -448,6 +449,8 @@ export {
 	QueryHandlerAlreadyRegisteredError,
 	QueryHandlerNotFoundError,
 	QueryRegistry,
+	RegisteredOutboxMessageDeserializer,
+	RegisteredOutboxMessageSerializer,
 };
 
 export type {
@@ -459,10 +462,12 @@ export type {
 	Clock,
 	DomainEventPublisher,
 	DomainEventSerializer,
+	DomainEventConstructor,
 	FindPendingOutboxMessagesParams,
 	IdGenerator,
 	OutboxMessage,
 	OutboxMessageDeserializer,
+	OutboxEventRegistration,
 	OutboxMessageFactoryDependencies,
 	OutboxMessagePayload,
 	OutboxProcessFailure,
@@ -472,6 +477,7 @@ export type {
 	ProcessPendingOutboxMessagesParams,
 	QueryConstructor,
 	QueryHandler,
+	RegisteredOutboxEvent,
 	TransactionableAsync,
 	TransactionPerformer,
 };
