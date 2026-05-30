@@ -9,9 +9,17 @@ export type OutboxMessageStatus =
 
 export type OutboxMessagePayload = Record<string, unknown>;
 
+export type OutboxMessageMetadata = {
+	readonly aggregateId?: string;
+	readonly aggregateType?: string;
+	readonly correlationId?: string;
+	readonly causationId?: string;
+};
+
 export type OutboxMessage = {
 	readonly id: string;
 	readonly eventName: string;
+	readonly eventVersion: number;
 	readonly payload: OutboxMessagePayload;
 	readonly occurredAt: Date;
 	readonly status: OutboxMessageStatus;
@@ -21,4 +29,4 @@ export type OutboxMessage = {
 	readonly publishedAt?: Date;
 	readonly failedAt?: Date;
 	readonly error?: string;
-};
+} & OutboxMessageMetadata;

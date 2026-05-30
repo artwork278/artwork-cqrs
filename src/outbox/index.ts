@@ -5,6 +5,7 @@ export type {
 	DomainEventConstructor,
 	OutboxEventRegistration,
 	RegisteredOutboxEvent,
+	RetrieveOutboxEventRegistrationParams,
 } from './OutboxEventRegistry.js';
 export { OutboxEventRegistry } from './OutboxEventRegistry.js';
 export {
@@ -18,6 +19,7 @@ export type {
 	DomainEventSerializer,
 	IdGenerator,
 	OutboxMessageFactoryDependencies,
+	SerializedOutboxEvent,
 } from './OutboxMessageFactory.js';
 export { OutboxMessageFactory } from './OutboxMessageFactory.js';
 export type {

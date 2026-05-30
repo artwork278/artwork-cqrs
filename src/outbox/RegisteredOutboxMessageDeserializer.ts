@@ -9,7 +9,10 @@ export class RegisteredOutboxMessageDeserializer
 	constructor(private readonly registry: OutboxEventRegistry) {}
 
 	deserialize(message: OutboxMessage): Promise<DomainEvent> | DomainEvent {
-		const registration = this.registry.retrieve(message.eventName);
+		const registration = this.registry.retrieve({
+			eventName: message.eventName,
+			eventVersion: message.eventVersion,
+		});
 
 		return registration.deserialize(message.payload);
 	}

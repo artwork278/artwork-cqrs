@@ -29,8 +29,14 @@ const fixedIdGenerator: IdGenerator = {
 
 const serializer: DomainEventSerializer<UserRegisteredDomainEvent> = {
 	serialize: (event) => ({
-		userId: event.userId,
-		email: event.email,
+		eventName: 'user.registered',
+		eventVersion: 1,
+		payload: {
+			userId: event.userId,
+			email: event.email,
+		},
+		aggregateId: event.userId,
+		aggregateType: 'user',
 	}),
 };
 
@@ -48,11 +54,14 @@ describe('OutboxMessageFactory', () => {
 
 		expect(message).toEqual({
 			id: 'outbox-message-1',
-			eventName: 'UserRegisteredDomainEvent',
+			eventName: 'user.registered',
+			eventVersion: 1,
 			payload: {
 				userId: 'user-1',
 				email: 'alice@example.com',
 			},
+			aggregateId: 'user-1',
+			aggregateType: 'user',
 			occurredAt: fixedDate,
 			status: OutboxMessageStatus.PENDING,
 			attempts: 0,
@@ -80,5 +89,24 @@ describe('OutboxMessageFactory', () => {
 			'outbox-message-1',
 			'outbox-message-2',
 		]);
+	});
+
+	test('overrides serialized metadata with create metadata', () => {
+		const factory = new OutboxMessageFactory({
+			clock: fixedClock,
+			idGenerator: fixedIdGenerator,
+			serializer,
+		});
+
+		const message = factory.create({
+			event: new UserRegisteredDomainEvent('user-1', 'alice@example.com'),
+			metadata: {
+				correlationId: 'correlation-1',
+				causationId: 'command-1',
+			},
+		});
+
+		expect(message.correlationId).toBe('correlation-1');
+		expect(message.causationId).toBe('command-1');
 	});
 });

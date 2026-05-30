@@ -20,7 +20,8 @@ const createMessage = (params: {
 	readonly status?: OutboxMessage['status'];
 }): OutboxMessage => ({
 	id: params.id,
-	eventName: 'UserRegisteredDomainEvent',
+	eventName: 'user.registered',
+	eventVersion: 1,
 	payload: {
 		userId: 'user-1',
 	},

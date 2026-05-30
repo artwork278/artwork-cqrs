@@ -29,10 +29,12 @@ const occurredAt = new Date('2026-01-01T00:00:00.000Z');
 
 const createMessage = (params: {
 	readonly eventName: string;
+	readonly eventVersion?: number;
 	readonly payload: OutboxMessage['payload'];
 }): OutboxMessage => ({
 	id: 'message-1',
 	eventName: params.eventName,
+	eventVersion: params.eventVersion ?? 1,
 	payload: params.payload,
 	occurredAt,
 	status: OutboxMessageStatus.PENDING,
@@ -46,9 +48,15 @@ describe('OutboxEventRegistry', () => {
 		const registry = new OutboxEventRegistry();
 
 		registry.register(UserRegisteredDomainEvent, {
+			eventName: 'user.registered',
+			eventVersion: 1,
 			serialize: (event) => ({
 				userId: event.userId,
 				email: event.email,
+			}),
+			retrieveMetadata: (event) => ({
+				aggregateId: event.userId,
+				aggregateType: 'user',
 			}),
 			deserialize: (payload) =>
 				new UserRegisteredDomainEvent(
@@ -60,17 +68,24 @@ describe('OutboxEventRegistry', () => {
 		const serializer = new RegisteredOutboxMessageSerializer(registry);
 		const deserializer = new RegisteredOutboxMessageDeserializer(registry);
 		const event = new UserRegisteredDomainEvent('user-1', 'alice@example.com');
-		const payload = serializer.serialize(event);
+		const serializedEvent = serializer.serialize(event);
 		const deserializedEvent = await deserializer.deserialize(
 			createMessage({
-				eventName: 'UserRegisteredDomainEvent',
-				payload,
+				eventName: 'user.registered',
+				eventVersion: 1,
+				payload: serializedEvent.payload,
 			}),
 		);
 
-		expect(payload).toEqual({
-			userId: 'user-1',
-			email: 'alice@example.com',
+		expect(serializedEvent).toEqual({
+			eventName: 'user.registered',
+			eventVersion: 1,
+			payload: {
+				userId: 'user-1',
+				email: 'alice@example.com',
+			},
+			aggregateId: 'user-1',
+			aggregateType: 'user',
 		});
 		expect(deserializedEvent).toEqual(event);
 	});
@@ -79,6 +94,8 @@ describe('OutboxEventRegistry', () => {
 		const registry = new OutboxEventRegistry();
 
 		registry.register(UserRegisteredDomainEvent, {
+			eventName: 'user.registered',
+			eventVersion: 1,
 			serialize: (event) => ({ userId: event.userId }),
 			deserialize: (payload) =>
 				new UserRegisteredDomainEvent(String(payload.userId), ''),
@@ -86,6 +103,8 @@ describe('OutboxEventRegistry', () => {
 
 		expect(() =>
 			registry.register(UserRegisteredDomainEvent, {
+				eventName: 'user.registered',
+				eventVersion: 1,
 				serialize: (event) => ({ userId: event.userId }),
 				deserialize: (payload) =>
 					new UserRegisteredDomainEvent(String(payload.userId), ''),
@@ -109,7 +128,8 @@ describe('OutboxEventRegistry', () => {
 		expect(() =>
 			deserializer.deserialize(
 				createMessage({
-					eventName: 'UnknownDomainEvent',
+					eventName: 'unknown.event',
+					eventVersion: 1,
 					payload: {},
 				}),
 			),

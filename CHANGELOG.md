@@ -5,6 +5,9 @@
 - Add `OutboxEventRegistry` for event serializer/deserializer registration.
 - Add registered outbox message serializer and deserializer helpers.
 - Add registry errors for duplicate and missing outbox event registrations.
+- Make outbox event identity explicit with `eventName` and `eventVersion`.
+- Add outbox message metadata fields for aggregate, correlation and causation
+  identifiers.
 
 ## 0.5.0
 

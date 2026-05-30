@@ -28,7 +28,8 @@ const fixedClock = {
 
 const createMessage = (id: string): OutboxMessage => ({
 	id,
-	eventName: 'UserRegisteredDomainEvent',
+	eventName: 'user.registered',
+	eventVersion: 1,
 	payload: {
 		userId: 'user-1',
 	},
@@ -65,6 +66,8 @@ describe('OutboxProcessor', () => {
 		const registry = new OutboxEventRegistry();
 
 		registry.register(UserRegisteredDomainEvent, {
+			eventName: 'user.registered',
+			eventVersion: 1,
 			serialize: (event) => ({
 				userId: event.userId,
 			}),

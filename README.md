@@ -299,9 +299,15 @@ const idGenerator: IdGenerator = {
 const outboxEventRegistry = new OutboxEventRegistry();
 
 outboxEventRegistry.register(UserRegisteredDomainEvent, {
+	eventName: 'user.registered',
+	eventVersion: 1,
 	serialize: (event) => ({
 		userId: event.userId,
 		email: event.email,
+	}),
+	retrieveMetadata: (event) => ({
+		aggregateId: event.userId,
+		aggregateType: 'user',
 	}),
 	deserialize: (payload) =>
 		new UserRegisteredDomainEvent(
@@ -323,6 +329,27 @@ const messages = outboxMessageFactory.createMany(events);
 
 await transactionPerformer.perform(outboxRepository.appendMany(messages));
 ```
+
+Outbox event identity is explicit. Do not use class names as durable event
+names. `eventName` and `eventVersion` are stored on each `OutboxMessage`, so
+renaming a class does not break old messages.
+
+```ts
+type OutboxMessage = {
+	readonly id: string;
+	readonly eventName: string;
+	readonly eventVersion: number;
+	readonly payload: Record<string, unknown>;
+	readonly aggregateId?: string;
+	readonly aggregateType?: string;
+	readonly correlationId?: string;
+	readonly causationId?: string;
+};
+```
+
+Use `retrieveMetadata` for event-derived metadata such as aggregate identity.
+Use `OutboxMessageFactory.create({ event, metadata })` for request-level
+metadata such as `correlationId` and `causationId`.
 
 ### Repository Contract
 
@@ -469,6 +496,7 @@ export type {
 	OutboxMessageDeserializer,
 	OutboxEventRegistration,
 	OutboxMessageFactoryDependencies,
+	OutboxMessageMetadata,
 	OutboxMessagePayload,
 	OutboxProcessFailure,
 	OutboxProcessResult,
@@ -477,7 +505,9 @@ export type {
 	ProcessPendingOutboxMessagesParams,
 	QueryConstructor,
 	QueryHandler,
+	RetrieveOutboxEventRegistrationParams,
 	RegisteredOutboxEvent,
+	SerializedOutboxEvent,
 	TransactionableAsync,
 	TransactionPerformer,
 };

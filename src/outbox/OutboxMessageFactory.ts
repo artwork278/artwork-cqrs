@@ -1,6 +1,7 @@
 import type { DomainEvent } from '../ddd/DomainEvent.js';
 import {
 	type OutboxMessage,
+	type OutboxMessageMetadata,
 	type OutboxMessagePayload,
 	OutboxMessageStatus,
 } from './OutboxMessage.js';
@@ -16,13 +17,20 @@ export interface IdGenerator {
 export interface DomainEventSerializer<
 	TEvent extends DomainEvent = DomainEvent,
 > {
-	serialize(event: TEvent): OutboxMessagePayload;
+	serialize(event: TEvent): SerializedOutboxEvent;
 }
+
+export type SerializedOutboxEvent = {
+	readonly eventName: string;
+	readonly eventVersion: number;
+	readonly payload: OutboxMessagePayload;
+} & OutboxMessageMetadata;
 
 export type CreateOutboxMessageParams<
 	TEvent extends DomainEvent = DomainEvent,
 > = {
 	readonly event: TEvent;
+	readonly metadata?: OutboxMessageMetadata;
 };
 
 export type OutboxMessageFactoryDependencies<
@@ -40,16 +48,25 @@ export class OutboxMessageFactory<TEvent extends DomainEvent = DomainEvent> {
 
 	create(params: CreateOutboxMessageParams<TEvent>): OutboxMessage {
 		const now = this.dependencies.clock.now();
+		const serializedEvent = this.dependencies.serializer.serialize(
+			params.event,
+		);
+		const metadata = retrieveMessageMetadata({
+			serializedEvent,
+			metadata: params.metadata,
+		});
 
 		return {
 			id: this.dependencies.idGenerator.generate(),
-			eventName: params.event.constructor.name,
-			payload: this.dependencies.serializer.serialize(params.event),
+			eventName: serializedEvent.eventName,
+			eventVersion: serializedEvent.eventVersion,
+			payload: serializedEvent.payload,
 			occurredAt: now,
 			status: OutboxMessageStatus.PENDING,
 			attempts: 0,
 			createdAt: now,
 			updatedAt: now,
+			...metadata,
 		};
 	}
 
@@ -57,3 +74,38 @@ export class OutboxMessageFactory<TEvent extends DomainEvent = DomainEvent> {
 		return events.map((event) => this.create({ event }));
 	}
 }
+
+type RetrieveMessageMetadataParams = {
+	readonly serializedEvent: SerializedOutboxEvent;
+	readonly metadata?: OutboxMessageMetadata;
+};
+
+const retrieveMessageMetadata = ({
+	serializedEvent,
+	metadata,
+}: RetrieveMessageMetadataParams): OutboxMessageMetadata => ({
+	...(serializedEvent.aggregateId === undefined
+		? {}
+		: { aggregateId: serializedEvent.aggregateId }),
+	...(serializedEvent.aggregateType === undefined
+		? {}
+		: { aggregateType: serializedEvent.aggregateType }),
+	...(serializedEvent.correlationId === undefined
+		? {}
+		: { correlationId: serializedEvent.correlationId }),
+	...(serializedEvent.causationId === undefined
+		? {}
+		: { causationId: serializedEvent.causationId }),
+	...(metadata?.aggregateId === undefined
+		? {}
+		: { aggregateId: metadata.aggregateId }),
+	...(metadata?.aggregateType === undefined
+		? {}
+		: { aggregateType: metadata.aggregateType }),
+	...(metadata?.correlationId === undefined
+		? {}
+		: { correlationId: metadata.correlationId }),
+	...(metadata?.causationId === undefined
+		? {}
+		: { causationId: metadata.causationId }),
+});

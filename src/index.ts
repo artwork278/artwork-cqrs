@@ -46,6 +46,7 @@ export type {
 	DomainEventConstructor,
 	OutboxEventRegistration,
 	RegisteredOutboxEvent,
+	RetrieveOutboxEventRegistrationParams,
 } from './outbox/OutboxEventRegistry.js';
 export * from './outbox/OutboxMessage.js';
 export type {
@@ -54,6 +55,7 @@ export type {
 	DomainEventSerializer,
 	IdGenerator,
 	OutboxMessageFactoryDependencies,
+	SerializedOutboxEvent,
 } from './outbox/OutboxMessageFactory.js';
 export type {
 	OutboxMessageDeserializer,
