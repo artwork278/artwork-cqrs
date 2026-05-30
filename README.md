@@ -8,7 +8,7 @@ It is inspired by `@nestjs/cqrs`, but intentionally avoids Nest, decorators,
 
 ## Status
 
-The current `main` branch targets `0.5.0`.
+The current `main` branch targets `0.6.0`.
 
 Published package:
 

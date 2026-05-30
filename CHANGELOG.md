@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
 
 - Add `OutboxEventRegistry` for event serializer/deserializer registration.
 - Add registered outbox message serializer and deserializer helpers.
