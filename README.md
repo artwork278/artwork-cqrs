@@ -1,4 +1,4 @@
-# @artwork278/cqrs
+# @artworkdev/cqrs
 
 Standalone CQRS, DDD and outbox primitives.
 
@@ -8,7 +8,7 @@ This package is framework-agnostic. It does not depend on Nest, decorators,
 ## Commands
 
 ```ts
-import { Command, CommandBus, type CommandHandler } from '@artwork278/cqrs';
+import { Command, CommandBus, type CommandHandler } from '@artworkdev/cqrs';
 
 class RegisterUserCommand extends Command {
 	constructor(
