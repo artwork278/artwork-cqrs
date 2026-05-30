@@ -1,5 +1,5 @@
 {
-	"name": "@artwork/cqrs",
+	"name": "@artwork278/cqrs",
 	"version": "0.1.0",
 	"description": "Standalone CQRS, DDD and outbox primitives.",
 	"type": "module",
