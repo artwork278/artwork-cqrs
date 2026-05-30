@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0
+
+- Add Bun SQLite outbox adapter under `@artworkdev/cqrs/sqlite`.
+- Add `SqliteTransactionPerformer` for synchronous SQLite transaction blocks.
+- Add SQLite outbox repository tests covering append, pending, published and
+  failed messages.
+
 ## 0.6.0
 
 - Add `OutboxEventRegistry` for event serializer/deserializer registration.

@@ -8,7 +8,7 @@ It is inspired by `@nestjs/cqrs`, but intentionally avoids Nest, decorators,
 
 ## Status
 
-The current `main` branch targets `0.6.0`.
+The current `main` branch targets `0.7.0`.
 
 Published package:
 
@@ -398,6 +398,38 @@ await transactionPerformer.perform(async (transaction) => {
 Do not hide transaction boundaries inside the bus. If aggregate persistence and
 outbox writes are not atomic, the outbox gives a false sense of reliability.
 
+### SQLite Adapter
+
+The SQLite adapter is exposed from a separate subpath:
+
+```ts
+import { Database } from 'bun:sqlite';
+import {
+	SqliteOutboxRepository,
+	SqliteTransactionPerformer,
+} from '@artworkdev/cqrs/sqlite';
+
+const database = new Database('app.sqlite');
+const transactionPerformer = new SqliteTransactionPerformer(database);
+const outboxRepository = new SqliteOutboxRepository({ database });
+
+outboxRepository.initialize();
+```
+
+Use it exactly like the in-memory repository, but execute writes through the
+SQLite transaction performer:
+
+```ts
+await transactionPerformer.perform((transaction) => {
+	userRepository.save(user)(transaction);
+	outboxRepository.appendMany(messages)(transaction);
+});
+```
+
+`SqliteTransactionPerformer` uses `BEGIN IMMEDIATE` through Bun SQLite
+transactions. Transaction blocks must be synchronous. Do async work before
+opening the SQLite transaction.
+
 ### Processing Pending Messages
 
 `OutboxProcessor` reads pending messages, deserializes them into domain events,
@@ -511,6 +543,23 @@ export type {
 	TransactionableAsync,
 	TransactionPerformer,
 };
+```
+
+SQLite adapter:
+
+```ts
+import {
+	SqliteAsyncTransactionBlockError,
+	SqliteOutboxPayloadParseError,
+	SqliteOutboxRepository,
+	SqliteOutboxStatusParseError,
+	SqliteTransactionPerformer,
+	type SqliteBinding,
+	type SqliteDatabase,
+	type SqliteStatement,
+	type SqliteTransactionContext,
+	type SqliteTransactionRunner,
+} from '@artworkdev/cqrs/sqlite';
 ```
 
 ## Development

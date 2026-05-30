@@ -1,6 +1,6 @@
 {
 	"name": "@artworkdev/cqrs",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"description": "Standalone CQRS primitives for TypeScript applications.",
 	"type": "module",
 	"license": "UNLICENSED",
@@ -29,6 +29,10 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
+		},
+		"./sqlite": {
+			"types": "./dist/adapters/sqlite/index.d.ts",
+			"import": "./dist/adapters/sqlite/index.js"
 		}
 	},
 	"files": [
