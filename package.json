@@ -6,6 +6,21 @@
 	"license": "UNLICENSED",
 	"packageManager": "bun@1.3.14",
 	"sideEffects": false,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/artwork278/artwork-cqrs.git"
+	},
+	"bugs": {
+		"url": "https://github.com/artwork278/artwork-cqrs/issues"
+	},
+	"homepage": "https://github.com/artwork278/artwork-cqrs#readme",
+	"keywords": [
+		"cqrs",
+		"ddd",
+		"command-bus",
+		"typescript",
+		"outbox"
+	],
 	"module": "src/index.ts",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -24,16 +39,17 @@
 	},
 	"scripts": {
 		"test": "bun test",
-		"lint": "biome lint src tests package.json tsconfig.json tsconfig.build.json biome.json README.md",
-		"format": "biome format --write src tests package.json tsconfig.json tsconfig.build.json biome.json README.md",
-		"check": "biome check src tests package.json tsconfig.json tsconfig.build.json biome.json README.md",
+		"lint": "biome lint src tests package.json tsconfig.json tsconfig.build.json biome.json README.md RELEASE.md",
+		"format": "biome format --write src tests package.json tsconfig.json tsconfig.build.json biome.json README.md RELEASE.md",
+		"check": "biome check src tests package.json tsconfig.json tsconfig.build.json biome.json README.md RELEASE.md",
 		"validate": "bun run check && bun run typecheck && bun test",
 		"typecheck": "tsc --noEmit",
 		"build": "rm -rf dist && tsc -p tsconfig.build.json",
 		"prepack": "bun run validate && bun run build",
 		"prepublishOnly": "bun run validate && bun run build",
 		"pack:dry-run": "bun pm pack --dry-run",
-		"publish:dry-run": "bun publish --dry-run"
+		"publish:dry-run": "bun publish --dry-run",
+		"release:restricted": "bun publish --access restricted"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.16",
