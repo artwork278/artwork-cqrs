@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Breaking: make `OutboxRepository` write operations return
+  `TransactionableAsync` instead of executing writes immediately.
+- Add `TransactionableAsync`, `TransactionPerformer` and
+  `NoopTransactionPerformer`.
+- Add `DomainEventPublisher` and `EventBusDomainEventPublisher`.
+- Add `OutboxProcessor` for pending outbox message publication.
+- Update outbox documentation around transaction boundaries and processor
+  responsibilities.
+
 ## 0.4.0
 
 - Add `OutboxMessage` and `OutboxMessageStatus`.

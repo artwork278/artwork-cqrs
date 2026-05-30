@@ -2,8 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import {
 	type Clock,
 	InMemoryOutboxRepository,
+	NoopTransactionPerformer,
 	type OutboxMessage,
 	OutboxMessageStatus,
+	type TransactionableAsync,
 } from '../../src';
 
 const createdAt = new Date('2026-01-01T00:00:00.000Z');
@@ -29,16 +31,24 @@ const createMessage = (params: {
 	updatedAt: createdAt,
 });
 
+const perform = async (block: TransactionableAsync): Promise<void> => {
+	const transactionPerformer = new NoopTransactionPerformer();
+
+	await transactionPerformer.perform(block);
+};
+
 describe('InMemoryOutboxRepository', () => {
-	test('appends and finds pending messages', () => {
+	test('appends and finds pending messages', async () => {
 		const repository = new InMemoryOutboxRepository(fixedClock);
 
-		repository.append(createMessage({ id: 'message-1' }));
-		repository.append(
-			createMessage({
-				id: 'message-2',
-				status: OutboxMessageStatus.PUBLISHED,
-			}),
+		await perform(repository.append(createMessage({ id: 'message-1' })));
+		await perform(
+			repository.append(
+				createMessage({
+					id: 'message-2',
+					status: OutboxMessageStatus.PUBLISHED,
+				}),
+			),
 		);
 
 		expect(repository.findPending()).toEqual([
@@ -46,24 +56,26 @@ describe('InMemoryOutboxRepository', () => {
 		]);
 	});
 
-	test('appends many messages and applies a pending limit', () => {
+	test('appends many messages and applies a pending limit', async () => {
 		const repository = new InMemoryOutboxRepository(fixedClock);
 
-		repository.appendMany([
-			createMessage({ id: 'message-1' }),
-			createMessage({ id: 'message-2' }),
-		]);
+		await perform(
+			repository.appendMany([
+				createMessage({ id: 'message-1' }),
+				createMessage({ id: 'message-2' }),
+			]),
+		);
 
 		expect(repository.findPending({ limit: 1 })).toEqual([
 			createMessage({ id: 'message-1' }),
 		]);
 	});
 
-	test('marks a message as published', () => {
+	test('marks a message as published', async () => {
 		const repository = new InMemoryOutboxRepository(fixedClock);
 
-		repository.append(createMessage({ id: 'message-1' }));
-		repository.markPublished('message-1');
+		await perform(repository.append(createMessage({ id: 'message-1' })));
+		await perform(repository.markPublished('message-1'));
 
 		expect(repository.findAll()).toEqual([
 			{
@@ -77,11 +89,13 @@ describe('InMemoryOutboxRepository', () => {
 		]);
 	});
 
-	test('marks a message as failed', () => {
+	test('marks a message as failed', async () => {
 		const repository = new InMemoryOutboxRepository(fixedClock);
 
-		repository.append(createMessage({ id: 'message-1' }));
-		repository.markFailed('message-1', new Error('Publish failed.'));
+		await perform(repository.append(createMessage({ id: 'message-1' })));
+		await perform(
+			repository.markFailed('message-1', new Error('Publish failed.')),
+		);
 
 		expect(repository.findAll()).toEqual([
 			{
@@ -95,10 +109,10 @@ describe('InMemoryOutboxRepository', () => {
 		]);
 	});
 
-	test('clears all messages', () => {
+	test('clears all messages', async () => {
 		const repository = new InMemoryOutboxRepository(fixedClock);
 
-		repository.append(createMessage({ id: 'message-1' }));
+		await perform(repository.append(createMessage({ id: 'message-1' })));
 		repository.clear();
 
 		expect(repository.findAll()).toEqual([]);

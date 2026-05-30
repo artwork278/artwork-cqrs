@@ -18,8 +18,11 @@ import {
 import { QueryRegistry } from './core/query/QueryRegistry.js';
 import { AggregateRoot } from './ddd/AggregateRoot.js';
 import { DomainEvent } from './ddd/DomainEvent.js';
+import { EventBusDomainEventPublisher } from './outbox/DomainEventPublisher.js';
 import { InMemoryOutboxRepository } from './outbox/InMemoryOutboxRepository.js';
 import { OutboxMessageFactory } from './outbox/OutboxMessageFactory.js';
+import { OutboxProcessor } from './outbox/OutboxProcessor.js';
+import { NoopTransactionPerformer } from './transaction/NoopTransactionPerformer.js';
 
 export type {
 	CommandConstructor,
@@ -31,6 +34,7 @@ export type {
 } from './core/event/Event.js';
 export type { EventHandlerExecutionFailure } from './core/event/EventErrors.js';
 export type { QueryConstructor, QueryHandler } from './core/query/Query.js';
+export type { DomainEventPublisher } from './outbox/DomainEventPublisher.js';
 export * from './outbox/OutboxMessage.js';
 export type {
 	Clock,
@@ -40,9 +44,20 @@ export type {
 	OutboxMessageFactoryDependencies,
 } from './outbox/OutboxMessageFactory.js';
 export type {
+	OutboxMessageDeserializer,
+	OutboxProcessFailure,
+	OutboxProcessorDependencies,
+	OutboxProcessResult,
+	ProcessPendingOutboxMessagesParams,
+} from './outbox/OutboxProcessor.js';
+export type {
 	FindPendingOutboxMessagesParams,
 	OutboxRepository,
 } from './outbox/OutboxRepository.js';
+export type {
+	TransactionableAsync,
+	TransactionPerformer,
+} from './transaction/Transaction.js';
 export {
 	AggregateRoot,
 	Command,
@@ -53,10 +68,13 @@ export {
 	DomainEvent,
 	Event,
 	EventBus,
+	EventBusDomainEventPublisher,
 	EventHandlerExecutionError,
 	EventRegistry,
 	InMemoryOutboxRepository,
+	NoopTransactionPerformer,
 	OutboxMessageFactory,
+	OutboxProcessor,
 	Query,
 	QueryBus,
 	QueryHandlerAlreadyRegisteredError,

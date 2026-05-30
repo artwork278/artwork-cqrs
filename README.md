@@ -22,13 +22,12 @@ Available primitives:
 - `QueryBus` for application reads.
 - `EventBus` for in-process event handlers.
 - `AggregateRoot` and `DomainEvent` for domain event collection.
-- `OutboxRepository` and `OutboxMessageFactory` for outbox persistence
+- `TransactionPerformer` and `TransactionableAsync` for explicit transaction
   boundaries.
-
-Planned primitives:
-
-- `EventPublisher` to coordinate domain events, outbox writes and optional
-  in-process publication.
+- `OutboxRepository`, `OutboxMessageFactory` and `OutboxProcessor` for
+  transaction-aware outbox workflows.
+- `DomainEventPublisher` and `EventBusDomainEventPublisher` for post-outbox
+  domain event publication.
 
 ## Design Rules
 
@@ -41,6 +40,8 @@ Planned primitives:
 - A missing event handler is not an error.
 - The library does not own transactions. Application code must keep aggregate
   persistence and outbox writes atomic.
+- Outbox writes return transactionable operations. The use case decides which
+  transaction executes them.
 
 ## Commands
 
@@ -279,6 +280,7 @@ storage belongs to your application.
 ```ts
 import {
 	InMemoryOutboxRepository,
+	NoopTransactionPerformer,
 	OutboxMessageFactory,
 	type DomainEventSerializer,
 	type Clock,
@@ -308,54 +310,117 @@ const outboxMessageFactory =
 	});
 
 const outboxRepository = new InMemoryOutboxRepository(fixedClock);
+const transactionPerformer = new NoopTransactionPerformer();
 const messages = outboxMessageFactory.createMany(events);
 
-await outboxRepository.appendMany(messages);
+await transactionPerformer.perform(outboxRepository.appendMany(messages));
 ```
 
 ### Repository Contract
 
-`OutboxRepository` is intentionally small:
+`OutboxRepository` is intentionally small, but write operations are
+transaction-aware:
 
 ```ts
-interface OutboxRepository {
-	append(message: OutboxMessage): Promise<void> | void;
-	appendMany(messages: readonly OutboxMessage[]): Promise<void> | void;
+type TransactionableAsync<TResult = void, TTransaction = void> = (
+	transaction: TTransaction,
+) => Promise<TResult> | TResult;
+
+interface OutboxRepository<TTransaction = void> {
+	append(message: OutboxMessage): TransactionableAsync<void, TTransaction>;
+	appendMany(
+		messages: readonly OutboxMessage[],
+	): TransactionableAsync<void, TTransaction>;
 	findPending(params?: { readonly limit?: number }):
 		| Promise<readonly OutboxMessage[]>
 		| readonly OutboxMessage[];
-	markPublished(id: string): Promise<void> | void;
-	markFailed(id: string, error: unknown): Promise<void> | void;
+	markPublished(id: string): TransactionableAsync<void, TTransaction>;
+	markFailed(
+		id: string,
+		error: unknown,
+	): TransactionableAsync<void, TTransaction>;
 }
 ```
 
 `InMemoryOutboxRepository` is for tests and local development only. It is not a
 durable outbox.
 
-## EventBus vs EventPublisher
+### Transaction Boundary
 
-`EventBus` is the low-level in-process publication mechanism. It finds
-registered handlers and calls them.
-
-`EventPublisher` is planned as an application-level orchestration primitive. It
-will coordinate domain events, outbox writes and optional in-process
-publication.
-
-The correct future shape is:
+The use case owns the transaction. This is the important bit:
 
 ```ts
-const events = user.pullDomainEvents();
+await transactionPerformer.perform(async (transaction) => {
+	await userRepository.save(user)(transaction);
 
-await transaction.run(async (trx) => {
-	await userRepository.save(user, trx);
-	await outboxRepository.appendMany(events, trx);
+	const events = user.pullDomainEvents();
+	const messages = outboxMessageFactory.createMany(events);
+
+	await outboxRepository.appendMany(messages)(transaction);
 });
-
-await eventBus.publishAll(events);
 ```
 
 Do not hide transaction boundaries inside the bus. If aggregate persistence and
 outbox writes are not atomic, the outbox gives a false sense of reliability.
+
+### Processing Pending Messages
+
+`OutboxProcessor` reads pending messages, deserializes them into domain events,
+publishes them, then marks the message as published or failed.
+
+```ts
+import {
+	EventBus,
+	EventBusDomainEventPublisher,
+	OutboxProcessor,
+} from '@artworkdev/cqrs';
+
+const eventBus = new EventBus();
+
+const processor = new OutboxProcessor({
+	outboxRepository,
+	transactionPerformer,
+	domainEventPublisher: new EventBusDomainEventPublisher(eventBus),
+	deserializer: {
+		deserialize: (message) => {
+			if (message.eventName !== 'UserRegisteredDomainEvent') {
+				throw new Error(`Unknown event: ${message.eventName}`);
+			}
+
+			return new UserRegisteredDomainEvent(
+				String(message.payload.userId),
+				String(message.payload.email),
+			);
+		},
+	},
+});
+
+const result = await processor.processPending({ limit: 100 });
+```
+
+`OutboxProcessor` publishes messages sequentially. That is deliberate for v1:
+it keeps retry and failure semantics simple. Parallel processing belongs in an
+application-level worker once locking, leases and concurrency limits are known.
+
+## EventBus vs DomainEventPublisher
+
+`EventBus` is the low-level in-process publication mechanism. It finds
+registered handlers and calls them.
+
+`DomainEventPublisher` is a port for publishing a domain event after it has
+left the outbox. `EventBusDomainEventPublisher` is the built-in adapter that
+publishes through `EventBus`.
+
+The correct shape is:
+
+```ts
+await transactionPerformer.perform(async (transaction) => {
+	await userRepository.save(user)(transaction);
+	await outboxRepository.appendMany(messages)(transaction);
+});
+
+await outboxProcessor.processPending();
+```
 
 ## Public API
 
@@ -368,10 +433,13 @@ export {
 	CommandRegistry,
 	Event,
 	EventBus,
+	EventBusDomainEventPublisher,
 	EventHandlerExecutionError,
 	EventRegistry,
 	InMemoryOutboxRepository,
+	NoopTransactionPerformer,
 	OutboxMessageFactory,
+	OutboxProcessor,
 	OutboxMessageStatus,
 	AggregateRoot,
 	DomainEvent,
@@ -389,15 +457,23 @@ export type {
 	EventHandler,
 	EventHandlerExecutionFailure,
 	Clock,
+	DomainEventPublisher,
 	DomainEventSerializer,
 	FindPendingOutboxMessagesParams,
 	IdGenerator,
 	OutboxMessage,
+	OutboxMessageDeserializer,
 	OutboxMessageFactoryDependencies,
 	OutboxMessagePayload,
+	OutboxProcessFailure,
+	OutboxProcessResult,
+	OutboxProcessorDependencies,
 	OutboxRepository,
+	ProcessPendingOutboxMessagesParams,
 	QueryConstructor,
 	QueryHandler,
+	TransactionableAsync,
+	TransactionPerformer,
 };
 ```
 

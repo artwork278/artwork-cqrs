@@ -14,14 +14,18 @@ export class InMemoryOutboxRepository implements OutboxRepository {
 
 	constructor(private readonly clock: Clock = systemClock) {}
 
-	append(message: OutboxMessage): void {
-		this.messages.set(message.id, message);
+	append(message: OutboxMessage): () => void {
+		return () => {
+			this.messages.set(message.id, message);
+		};
 	}
 
-	appendMany(messages: readonly OutboxMessage[]): void {
-		messages.forEach((message) => {
-			this.append(message);
-		});
+	appendMany(messages: readonly OutboxMessage[]): () => void {
+		return () => {
+			messages.forEach((message) => {
+				this.messages.set(message.id, message);
+			});
+		};
 	}
 
 	findPending(
@@ -36,38 +40,42 @@ export class InMemoryOutboxRepository implements OutboxRepository {
 		return messages.slice(0, params.limit);
 	}
 
-	markPublished(id: string): void {
-		const message = this.messages.get(id);
+	markPublished(id: string): () => void {
+		return () => {
+			const message = this.messages.get(id);
 
-		if (!message) return;
+			if (!message) return;
 
-		const now = this.clock.now();
+			const now = this.clock.now();
 
-		this.messages.set(id, {
-			...message,
-			status: OutboxMessageStatus.PUBLISHED,
-			updatedAt: now,
-			publishedAt: now,
-			error: undefined,
-			failedAt: undefined,
-		});
+			this.messages.set(id, {
+				...message,
+				status: OutboxMessageStatus.PUBLISHED,
+				updatedAt: now,
+				publishedAt: now,
+				error: undefined,
+				failedAt: undefined,
+			});
+		};
 	}
 
-	markFailed(id: string, error: unknown): void {
-		const message = this.messages.get(id);
+	markFailed(id: string, error: unknown): () => void {
+		return () => {
+			const message = this.messages.get(id);
 
-		if (!message) return;
+			if (!message) return;
 
-		const now = this.clock.now();
+			const now = this.clock.now();
 
-		this.messages.set(id, {
-			...message,
-			status: OutboxMessageStatus.FAILED,
-			attempts: message.attempts + 1,
-			updatedAt: now,
-			failedAt: now,
-			error: retrieveErrorMessage(error),
-		});
+			this.messages.set(id, {
+				...message,
+				status: OutboxMessageStatus.FAILED,
+				attempts: message.attempts + 1,
+				updatedAt: now,
+				failedAt: now,
+				error: retrieveErrorMessage(error),
+			});
+		};
 	}
 
 	findAll(): readonly OutboxMessage[] {

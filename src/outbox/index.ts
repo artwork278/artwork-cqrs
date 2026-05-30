@@ -1,3 +1,5 @@
+export type { DomainEventPublisher } from './DomainEventPublisher.js';
+export { EventBusDomainEventPublisher } from './DomainEventPublisher.js';
 export { InMemoryOutboxRepository } from './InMemoryOutboxRepository.js';
 export * from './OutboxMessage.js';
 export type {
@@ -8,6 +10,14 @@ export type {
 	OutboxMessageFactoryDependencies,
 } from './OutboxMessageFactory.js';
 export { OutboxMessageFactory } from './OutboxMessageFactory.js';
+export type {
+	OutboxMessageDeserializer,
+	OutboxProcessFailure,
+	OutboxProcessorDependencies,
+	OutboxProcessResult,
+	ProcessPendingOutboxMessagesParams,
+} from './OutboxProcessor.js';
+export { OutboxProcessor } from './OutboxProcessor.js';
 export type {
 	FindPendingOutboxMessagesParams,
 	OutboxRepository,
