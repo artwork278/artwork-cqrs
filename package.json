@@ -1,0 +1,43 @@
+{
+	"name": "@artwork/cqrs",
+	"version": "0.1.0",
+	"description": "Standalone CQRS, DDD and outbox primitives.",
+	"type": "module",
+	"license": "UNLICENSED",
+	"packageManager": "bun@1.3.14",
+	"sideEffects": false,
+	"module": "src/index.ts",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist",
+		"README.md"
+	],
+	"publishConfig": {
+		"access": "restricted"
+	},
+	"scripts": {
+		"test": "bun test",
+		"lint": "biome lint src tests package.json tsconfig.json tsconfig.build.json biome.json README.md",
+		"format": "biome format --write src tests package.json tsconfig.json tsconfig.build.json biome.json README.md",
+		"check": "biome check src tests package.json tsconfig.json tsconfig.build.json biome.json README.md",
+		"validate": "bun run check && bun run typecheck && bun test",
+		"typecheck": "tsc --noEmit",
+		"build": "rm -rf dist && tsc -p tsconfig.build.json",
+		"prepack": "bun run validate && bun run build",
+		"prepublishOnly": "bun run validate && bun run build",
+		"pack:dry-run": "bun pm pack --dry-run",
+		"publish:dry-run": "bun publish --dry-run"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.16",
+		"@types/bun": "latest",
+		"typescript": "^5.9.3"
+	}
+}
