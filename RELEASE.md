@@ -1,12 +1,12 @@
 # Release
 
-This package is published as a restricted npm package.
+This package is published as a public scoped npm package.
 
 ## Preconditions
 
 - The working tree is clean.
 - `package.json` contains the target version.
-- The npm account has access to the `@artwork` scope.
+- The npm account has publish access to the `@artwork` scope.
 - GitHub Actions has an `NPM_TOKEN` secret with publish permission.
 
 ## Local checks
@@ -27,5 +27,5 @@ Use the manual `Release` GitHub Actions workflow and pass the exact
 For an emergency local publish:
 
 ```bash
-bun run release:restricted
+bun run release:public
 ```

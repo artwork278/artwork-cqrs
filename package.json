@@ -35,7 +35,7 @@
 		"README.md"
 	],
 	"publishConfig": {
-		"access": "restricted"
+		"access": "public"
 	},
 	"scripts": {
 		"test": "bun test",
@@ -49,7 +49,7 @@
 		"prepublishOnly": "bun run validate && bun run build",
 		"pack:dry-run": "bun pm pack --dry-run",
 		"publish:dry-run": "bun publish --dry-run",
-		"release:restricted": "bun publish --access restricted"
+		"release:public": "bun publish --access public"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.16",

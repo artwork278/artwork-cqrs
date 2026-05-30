@@ -41,7 +41,7 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Publish restricted package
-        run: bun publish --access restricted
+      - name: Publish public package
+        run: bun publish --access public
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
