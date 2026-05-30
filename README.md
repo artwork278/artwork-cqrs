@@ -8,7 +8,7 @@ It is inspired by `@nestjs/cqrs`, but intentionally avoids Nest, decorators,
 
 ## Status
 
-The current `main` branch targets `0.2.0`.
+The current `main` branch targets `0.4.0`.
 
 Published package:
 
@@ -22,10 +22,11 @@ Available primitives:
 - `QueryBus` for application reads.
 - `EventBus` for in-process event handlers.
 - `AggregateRoot` and `DomainEvent` for domain event collection.
+- `OutboxRepository` and `OutboxMessageFactory` for outbox persistence
+  boundaries.
 
 Planned primitives:
 
-- `OutboxRepository` interface.
 - `EventPublisher` to coordinate domain events, outbox writes and optional
   in-process publication.
 
@@ -269,6 +270,68 @@ user.loadFromHistory(previousEvents);
 Use `pullDomainEvents()` after persistence to collect and clear pending events.
 Use `getDomainEvents()` only for inspection.
 
+## Outbox
+
+The outbox primitives define how domain events become durable messages. The
+library provides the contract and a memory implementation for tests; production
+storage belongs to your application.
+
+```ts
+import {
+	InMemoryOutboxRepository,
+	OutboxMessageFactory,
+	type DomainEventSerializer,
+	type Clock,
+	type IdGenerator,
+} from '@artworkdev/cqrs';
+
+const fixedClock: Clock = {
+	now: () => new Date('2026-01-01T00:00:00.000Z'),
+};
+
+const idGenerator: IdGenerator = {
+	generate: () => 'outbox-message-1',
+};
+
+const serializer: DomainEventSerializer<UserRegisteredDomainEvent> = {
+	serialize: (event) => ({
+		userId: event.userId,
+		email: event.email,
+	}),
+};
+
+const outboxMessageFactory =
+	new OutboxMessageFactory<UserRegisteredDomainEvent>({
+		clock: fixedClock,
+		idGenerator,
+		serializer,
+	});
+
+const outboxRepository = new InMemoryOutboxRepository(fixedClock);
+const messages = outboxMessageFactory.createMany(events);
+
+await outboxRepository.appendMany(messages);
+```
+
+### Repository Contract
+
+`OutboxRepository` is intentionally small:
+
+```ts
+interface OutboxRepository {
+	append(message: OutboxMessage): Promise<void> | void;
+	appendMany(messages: readonly OutboxMessage[]): Promise<void> | void;
+	findPending(params?: { readonly limit?: number }):
+		| Promise<readonly OutboxMessage[]>
+		| readonly OutboxMessage[];
+	markPublished(id: string): Promise<void> | void;
+	markFailed(id: string, error: unknown): Promise<void> | void;
+}
+```
+
+`InMemoryOutboxRepository` is for tests and local development only. It is not a
+durable outbox.
+
 ## EventBus vs EventPublisher
 
 `EventBus` is the low-level in-process publication mechanism. It finds
@@ -307,6 +370,9 @@ export {
 	EventBus,
 	EventHandlerExecutionError,
 	EventRegistry,
+	InMemoryOutboxRepository,
+	OutboxMessageFactory,
+	OutboxMessageStatus,
 	AggregateRoot,
 	DomainEvent,
 	Query,
@@ -322,6 +388,14 @@ export type {
 	EventConstructor,
 	EventHandler,
 	EventHandlerExecutionFailure,
+	Clock,
+	DomainEventSerializer,
+	FindPendingOutboxMessagesParams,
+	IdGenerator,
+	OutboxMessage,
+	OutboxMessageFactoryDependencies,
+	OutboxMessagePayload,
+	OutboxRepository,
 	QueryConstructor,
 	QueryHandler,
 };

@@ -18,6 +18,8 @@ import {
 import { QueryRegistry } from './core/query/QueryRegistry.js';
 import { AggregateRoot } from './ddd/AggregateRoot.js';
 import { DomainEvent } from './ddd/DomainEvent.js';
+import { InMemoryOutboxRepository } from './outbox/InMemoryOutboxRepository.js';
+import { OutboxMessageFactory } from './outbox/OutboxMessageFactory.js';
 
 export type {
 	CommandConstructor,
@@ -29,6 +31,18 @@ export type {
 } from './core/event/Event.js';
 export type { EventHandlerExecutionFailure } from './core/event/EventErrors.js';
 export type { QueryConstructor, QueryHandler } from './core/query/Query.js';
+export * from './outbox/OutboxMessage.js';
+export type {
+	Clock,
+	CreateOutboxMessageParams,
+	DomainEventSerializer,
+	IdGenerator,
+	OutboxMessageFactoryDependencies,
+} from './outbox/OutboxMessageFactory.js';
+export type {
+	FindPendingOutboxMessagesParams,
+	OutboxRepository,
+} from './outbox/OutboxRepository.js';
 export {
 	AggregateRoot,
 	Command,
@@ -41,6 +55,8 @@ export {
 	EventBus,
 	EventHandlerExecutionError,
 	EventRegistry,
+	InMemoryOutboxRepository,
+	OutboxMessageFactory,
 	Query,
 	QueryBus,
 	QueryHandlerAlreadyRegisteredError,

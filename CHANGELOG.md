@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+- Add `OutboxMessage` and `OutboxMessageStatus`.
+- Add `OutboxRepository` contract.
+- Add `OutboxMessageFactory` with injectable clock, id generator and domain
+  event serializer.
+- Add `InMemoryOutboxRepository` for tests and local development.
+- Document outbox usage and transaction boundaries.
+
 ## 0.3.0
 
 - Add `DomainEvent`.
