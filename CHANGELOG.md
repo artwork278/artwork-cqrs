@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - Breaking: make `OutboxRepository` write operations return
   `TransactionableAsync` instead of executing writes immediately.
